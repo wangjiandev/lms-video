@@ -47,7 +47,7 @@ const Navbar = () => {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             {isPending ? null : session ? (
-              <UserDropdown />
+              <UserDropdown name={session.user.name} email={session.user.email} image={session.user.image ?? ''} />
             ) : (
               <>
                 <Link

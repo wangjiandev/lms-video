@@ -17,7 +17,13 @@ import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 import { toast } from 'sonner'
 
-const UserDropdown = () => {
+interface UserDropdownProps {
+  name: string
+  email: string
+  image: string
+}
+
+const UserDropdown = ({ name, email, image }: UserDropdownProps) => {
   const router = useRouter()
 
   const loginOut = async () => {
@@ -36,19 +42,23 @@ const UserDropdown = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild className="focus-visible:ring-transparent">
-        <Button variant="ghost" className="hover:bg-transparent">
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="hover:bg-transparent">
           <Avatar className="size-6">
-            <AvatarImage src="./avatar.jpg" alt="Profile image" />
-            <AvatarFallback>K</AvatarFallback>
+            <AvatarImage src={image} alt="Profile image" />
+            <AvatarFallback>{name.charAt(0).toLocaleUpperCase()}</AvatarFallback>
           </Avatar>
           <ChevronDownIcon size={12} className="opacity-60" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-w-96" sideOffset={20}>
+      <DropdownMenuContent
+        align="end"
+        className="max-w-96"
+        sideOffset={20}
+        onCloseAutoFocus={(e) => e.preventDefault()}>
         <DropdownMenuLabel className="flex min-w-0 flex-col">
-          <span className="text-foreground truncate text-sm font-medium">wangjian</span>
-          <span className="text-muted-foreground truncate text-xs font-normal">928647866@qq.com</span>
+          <span className="text-foreground truncate text-sm font-medium">{name}</span>
+          <span className="text-muted-foreground truncate text-xs font-normal">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
