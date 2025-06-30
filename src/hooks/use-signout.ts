@@ -1,13 +1,13 @@
 'use client'
 
 import { authClient } from '@/lib/auth-client'
-import { Button } from './ui/button'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
-const LoginOut = () => {
+export const useSignOut = () => {
   const router = useRouter()
-  const loginOut = async () => {
+
+  const signOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
@@ -20,13 +20,6 @@ const LoginOut = () => {
       },
     })
   }
-  return (
-    <>
-      <Button onClick={loginOut} variant="secondary">
-        LoginOut
-      </Button>
-    </>
-  )
-}
 
-export default LoginOut
+  return { signOut }
+}

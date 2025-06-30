@@ -69,33 +69,7 @@ const Page = async () => {
           </div>
         </div>
       </section>
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {features.map((feature, index) => (
-          <Card key={index} className="transition-shadow hover:shadow-lg">
-            <CardHeader>
-              <div className="mb-2 text-4xl">{feature.icon}</div>
-              <CardTitle>{feature.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{feature.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {features.map((feature, index) => (
-          <Card key={index} className="transition-shadow hover:shadow-lg">
-            <CardHeader>
-              <div className="mb-2 text-4xl">{feature.icon}</div>
-              <CardTitle>{feature.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{feature.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <section className="mb-36 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {features.map((feature, index) => (
           <Card key={index} className="transition-shadow hover:shadow-lg">
             <CardHeader>
