@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, integer, pgEnum } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -54,4 +54,27 @@ export const verification = pgTable('verification', {
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()),
   updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+})
+
+export const courseLevel = pgEnum('course_level', ['Beginner', 'Intermediate', 'Advanced'])
+
+export const courseStatus = pgEnum('course_status', ['Draft', 'Published', 'Archived'])
+
+export const course = pgTable('course', {
+  id: text('id').primaryKey(),
+  title: text('title'),
+  description: text('description'),
+  fileKey: text('file_key'),
+  price: integer('price'),
+  duration: integer('duration'),
+  level: courseLevel('level').default('Beginner'),
+  category: text('category'),
+  smallDescription: text('small_description'),
+  slug: text('slug').notNull().unique(),
+  status: courseStatus('status').default('Draft'),
+  createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+  updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
 })
