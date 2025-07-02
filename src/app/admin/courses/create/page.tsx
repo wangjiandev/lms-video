@@ -14,6 +14,7 @@ import slugify from 'slugify'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RichTextEditor } from '@/components/rich-text-editor/Editor'
+import Uploader from '@/components/file-uploader/Uploader'
 
 const Page = () => {
   // 1. Define your form.
@@ -120,7 +121,7 @@ const Page = () => {
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="fileKey"
@@ -128,7 +129,7 @@ const Page = () => {
                     <FormItem className="w-full">
                       <FormLabel>Thumbnail Image</FormLabel>
                       <FormControl>
-                        <Input placeholder="Thumbnail Image" {...field} />
+                        <Uploader />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
