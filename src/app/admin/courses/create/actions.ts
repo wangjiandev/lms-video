@@ -2,26 +2,51 @@
 
 import { db } from '@/db'
 import { course } from '@/db/schema'
-import { auth } from '@/lib/auth'
 import { ActionResponse } from '@/lib/types'
 import { courseSchema, type CourseSchemaType } from '@/lib/zodSchemas'
 import { nanoid } from 'nanoid'
-import { headers } from 'next/headers'
+import { requireAdmin } from '@/data/admin/require-admin'
+import arcjet from '@/lib/arcjet'
+import { detectBot, fixedWindow, request } from '@arcjet/next'
+
+const aj = arcjet
+  .withRule(
+    detectBot({
+      mode: 'LIVE',
+      allow: [],
+    }),
+  )
+  .withRule(
+    fixedWindow({
+      mode: 'LIVE',
+      window: '1m',
+      max: 5,
+    }),
+  )
 
 export async function createCourse(data: CourseSchemaType): Promise<ActionResponse> {
+  const session = await requireAdmin()
   try {
-    const validation = courseSchema.safeParse(data)
-
-    const session = await auth.api.getSession({
-      headers: await headers(),
+    const req = await request()
+    const decision = await aj.protect(req, {
+      fingerprint: session.user.id,
     })
 
-    if (!session?.user) {
-      return {
-        status: 'error',
-        message: 'Unauthorized',
+    if (decision.isDenied()) {
+      if (decision.reason.isRateLimit()) {
+        return {
+          status: 'error',
+          message: 'you have been blocked due to rate limiting',
+        }
+      } else {
+        return {
+          status: 'error',
+          message: 'you are bot! if this is a mistake, please contact support',
+        }
       }
     }
+
+    const validation = courseSchema.safeParse(data)
 
     if (!validation.success) {
       return {

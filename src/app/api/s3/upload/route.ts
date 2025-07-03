@@ -7,8 +7,7 @@ import { nanoid } from 'nanoid'
 import { S3 } from '@/lib/S3Client'
 import arcjet from '@/lib/arcjet'
 import { detectBot, fixedWindow } from '@arcjet/next'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { requireAdmin } from '@/data/admin/require-admin'
 
 export const fileUploadSchema = z.object({
   fileName: z.string().min(1, { message: 'File name is required' }),
@@ -33,13 +32,7 @@ const aj = arcjet
   )
 
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
-
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const session = await requireAdmin()
 
   try {
     const decision = await aj.protect(request, {

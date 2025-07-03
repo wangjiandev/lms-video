@@ -4,8 +4,7 @@ import { env } from '@/lib/env'
 import { S3 } from '@/lib/S3Client'
 import arcjet from '@/lib/arcjet'
 import { detectBot, fixedWindow } from '@arcjet/next'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { requireAdmin } from '@/data/admin/require-admin'
 
 const aj = arcjet
   .withRule(
@@ -23,15 +22,8 @@ const aj = arcjet
   )
 
 export async function DELETE(request: NextRequest) {
+  const session = await requireAdmin()
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const decision = await aj.protect(request, {
       fingerprint: session.user.id,
     })
