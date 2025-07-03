@@ -1,22 +1,30 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeftIcon, SpaceIcon, SparkleIcon } from 'lucide-react'
+import { ArrowLeftIcon, Loader2Icon, SparkleIcon } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { courseCategories, courseLevel, courseSchema, courseStatus, type CourseSchemaType } from '@/lib/zodSchemas'
 import { Button } from '@/components/ui/button'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import slugify from 'slugify'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RichTextEditor } from '@/components/rich-text-editor/Editor'
 import Uploader from '@/components/file-uploader/Uploader'
+import { useTransition } from 'react'
+import { tryCatch } from '@/hooks/try-catch'
+import { createCourse } from './actions'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 const Page = () => {
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
   // 1. Define your form.
   const form = useForm<CourseSchemaType>({
     resolver: zodResolver(courseSchema),
@@ -38,8 +46,22 @@ const Page = () => {
   function onSubmit(values: CourseSchemaType) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values)
+    startTransition(async () => {
+      const { data, error } = await tryCatch(createCourse(values))
+      if (error) {
+        toast.error(error.message)
+        return
+      }
+      if (data.status === 'success') {
+        toast.success(data.message)
+        form.reset()
+        router.push('/admin/courses')
+      } else if (data.status === 'error') {
+        toast.error(data.message)
+      }
+    })
   }
+
   return (
     <div className="flex flex-col gap-6 px-4 lg:px-6">
       <div className="flex items-center gap-4">
@@ -129,7 +151,7 @@ const Page = () => {
                     <FormItem className="w-full">
                       <FormLabel>Thumbnail Image</FormLabel>
                       <FormControl>
-                        <Uploader />
+                        <Uploader onChange={field.onChange} value={field.value} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -194,7 +216,7 @@ const Page = () => {
                     <FormItem className="w-full">
                       <FormLabel>Duration (in hours)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Duration" type="number" min={1} max={500} {...field} />
+                        <Input placeholder="Duration" type="number" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -238,8 +260,15 @@ const Page = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Create Course
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2Icon className="h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Course'
+                )}
               </Button>
             </form>
           </Form>

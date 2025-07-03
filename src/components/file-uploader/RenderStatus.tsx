@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { CloudUploadIcon, ImageIcon, TrashIcon } from 'lucide-react'
+import { CloudUploadIcon, ImageIcon, Loader2, TrashIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 
@@ -40,12 +40,26 @@ export const RenderErrorStatus = () => {
   )
 }
 
-export const RenderUploadedStatus = ({ previewUrl }: { previewUrl: string }) => {
+export const RenderUploadedStatus = ({
+  previewUrl,
+  isDeleting,
+  handleDeleteFile,
+}: {
+  previewUrl: string
+  isDeleting: boolean
+  handleDeleteFile: () => void
+}) => {
   return (
     <div>
       <Image src={previewUrl} alt="uploaded file" fill className="object-contain p-2" />
-      <Button type="button" variant="destructive" size="icon" className={cn('absolute top-4 right-4')}>
-        <TrashIcon className="size-4" />
+      <Button
+        type="button"
+        variant="destructive"
+        size="icon"
+        className={cn('absolute top-4 right-4')}
+        onClick={handleDeleteFile}
+        disabled={isDeleting}>
+        {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <TrashIcon className="size-4" />}
       </Button>
     </div>
   )

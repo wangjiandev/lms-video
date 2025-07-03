@@ -20,7 +20,12 @@ interface UploaderState {
   fileType: 'image' | 'video'
 }
 
-const Uploader = () => {
+interface UploaderProps {
+  onChange?: (value: string) => void
+  value?: string
+}
+
+const Uploader = ({ onChange, value }: UploaderProps) => {
   const [fileState, setFileState] = useState<UploaderState>({
     id: null,
     file: null,
@@ -29,6 +34,7 @@ const Uploader = () => {
     isDeleting: false,
     error: false,
     fileType: 'image',
+    key: value,
   })
 
   async function uploadFile(file: File) {
@@ -89,6 +95,9 @@ const Uploader = () => {
               progress: 100,
               key: key,
             }))
+
+            onChange?.(key)
+
             toast.success('File uploaded successfully')
             resolve(true)
           } else {
@@ -146,6 +155,53 @@ const Uploader = () => {
       ...prev,
       isDeleting: true,
     }))
+
+    try {
+      const response = await fetch('/api/s3/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key: fileState.key }),
+      })
+
+      if (!response.ok) {
+        toast.error('Failed to delete file')
+        setFileState((prev) => ({
+          ...prev,
+          isDeleting: false,
+          error: true,
+        }))
+        return
+      }
+
+      // Revoke the old object url if it exists
+      if (fileState.objectUrl && !fileState.objectUrl.startsWith('http')) {
+        URL.revokeObjectURL(fileState.objectUrl)
+      }
+
+      onChange?.('')
+
+      setFileState({
+        file: null,
+        id: null,
+        uploading: false,
+        progress: 0,
+        isDeleting: false,
+        error: false,
+        objectUrl: undefined,
+        fileType: 'image',
+      })
+
+      toast.success('File deleted successfully')
+    } catch {
+      toast.error('Failed to delete file')
+      setFileState((prev) => ({
+        ...prev,
+        isDeleting: false,
+        error: true,
+      }))
+    }
   }
 
   function rejectedFiles(fileRejections: FileRejection[]) {
@@ -177,7 +233,13 @@ const Uploader = () => {
     }
 
     if (fileState.objectUrl) {
-      return <RenderUploadedStatus previewUrl={fileState.objectUrl} />
+      return (
+        <RenderUploadedStatus
+          previewUrl={fileState.objectUrl}
+          isDeleting={fileState.isDeleting}
+          handleDeleteFile={handleDeleteFile}
+        />
+      )
     }
 
     return <RenderEmptyStatus isDragActive={isDragActive} />
@@ -199,6 +261,7 @@ const Uploader = () => {
     multiple: false,
     maxSize: 1024 * 1024 * 5, // 5MB
     onDropRejected: rejectedFiles,
+    disabled: fileState.uploading || !!fileState.objectUrl,
   })
 
   return (
