@@ -5,6 +5,10 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { env } from '@/lib/env'
 import { nanoid } from 'nanoid'
 import { S3 } from '@/lib/S3Client'
+import arcjet from '@/lib/arcjet'
+import { detectBot, fixedWindow } from '@arcjet/next'
+import { auth } from '@/lib/auth'
+import { headers } from 'next/headers'
 
 export const fileUploadSchema = z.object({
   fileName: z.string().min(1, { message: 'File name is required' }),
@@ -13,8 +17,39 @@ export const fileUploadSchema = z.object({
   isImage: z.boolean(),
 })
 
+const aj = arcjet
+  .withRule(
+    detectBot({
+      mode: 'LIVE',
+      allow: [],
+    }),
+  )
+  .withRule(
+    fixedWindow({
+      mode: 'LIVE',
+      window: '1m',
+      max: 5,
+    }),
+  )
+
 export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
+    const decision = await aj.protect(request, {
+      fingerprint: session.user.id,
+    })
+
+    if (decision.isDenied()) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const body = await request.json()
     const validation = fileUploadSchema.safeParse(body)
     if (!validation.success) {
