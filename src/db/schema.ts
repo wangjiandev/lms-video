@@ -1,4 +1,6 @@
+import { relations } from 'drizzle-orm'
 import { pgTable, text, timestamp, boolean, integer, pgEnum } from 'drizzle-orm/pg-core'
+import { nanoid } from 'nanoid'
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -66,7 +68,9 @@ export const courseLevel = pgEnum('course_level', ['Beginner', 'Intermediate', '
 export const courseStatus = pgEnum('course_status', ['Draft', 'Published', 'Archived'])
 
 export const course = pgTable('course', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => nanoid()),
   title: text('title'),
   description: text('description'),
   fileKey: text('file_key'),
@@ -83,3 +87,49 @@ export const course = pgTable('course', {
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
 })
+
+export const courseRelations = relations(course, ({ many }) => ({
+  chapters: many(chapter),
+}))
+
+export const chapter = pgTable('chapter', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => nanoid()),
+  title: text('title').notNull(),
+  position: integer('position').notNull(),
+
+  createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+  updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+  courseId: text('course_id').notNull(),
+})
+
+export const chapterRelations = relations(chapter, ({ many, one }) => ({
+  lessons: many(lesson),
+  course: one(course, {
+    fields: [chapter.courseId],
+    references: [course.id],
+  }),
+}))
+
+export const lesson = pgTable('lesson', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => nanoid()),
+  title: text('title').notNull(),
+  description: text('description'),
+  thumbnailKey: text('thumbnail_key'),
+  videoKey: text('video_key'),
+  position: integer('position').notNull(),
+
+  createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+  updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+  chapterId: text('chapter_id').notNull(),
+})
+
+export const lessonRelations = relations(lesson, ({ one }) => ({
+  chapter: one(chapter, {
+    fields: [lesson.chapterId],
+    references: [chapter.id],
+  }),
+}))

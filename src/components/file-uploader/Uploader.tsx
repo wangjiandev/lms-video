@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { RenderEmptyStatus, RenderErrorStatus, RenderUploadedStatus, RenderUploadingStatus } from './RenderStatus'
 import { toast } from 'sonner'
 import { nanoid } from 'nanoid'
+import { useConstruct } from '@/hooks/use-construct'
 
 interface UploaderState {
   id: string | null
@@ -26,6 +27,7 @@ interface UploaderProps {
 }
 
 const Uploader = ({ onChange, value }: UploaderProps) => {
+  const fileUrl = useConstruct(value ?? '')
   const [fileState, setFileState] = useState<UploaderState>({
     id: null,
     file: null,
@@ -35,6 +37,7 @@ const Uploader = ({ onChange, value }: UploaderProps) => {
     error: false,
     fileType: 'image',
     key: value,
+    objectUrl: fileUrl,
   })
 
   async function uploadFile(file: File) {
