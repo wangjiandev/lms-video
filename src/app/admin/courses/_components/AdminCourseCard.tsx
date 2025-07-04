@@ -53,7 +53,7 @@ const AdminCourseCard = ({ course }: AdminCourseCardProps) => {
         alt="Thumbnail Url"
         width={600}
         height={400}
-        className="aspect-video h-full w-full rounded-t-lg object-cover"
+        className="aspect-video h-full w-full rounded-t-xl object-cover"
       />
       <CardContent className="p-6">
         <Link
