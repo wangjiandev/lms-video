@@ -3,12 +3,12 @@
 import { db } from '@/db'
 import { chapter, course, lesson } from '@/db/schema'
 import { ActionResponse } from '@/lib/types'
-import { courseSchema, type CourseSchemaType } from '@/lib/zodSchemas'
+import { chapterSchema, ChapterSchemaType, courseSchema, type CourseSchemaType } from '@/lib/zodSchemas'
 import { nanoid } from 'nanoid'
 import { requireAdmin } from '@/data/admin/require-admin'
 import arcjet from '@/lib/arcjet'
 import { detectBot, fixedWindow, request } from '@arcjet/next'
-import { and, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 const aj = arcjet
@@ -153,6 +153,45 @@ export async function reorderChapters(
     return {
       status: 'error',
       message: 'Failed to reorder chapters',
+    }
+  }
+}
+
+export async function createChapter(data: ChapterSchemaType): Promise<ActionResponse> {
+  const session = await requireAdmin()
+  try {
+    const validation = chapterSchema.safeParse(data)
+
+    if (!validation.success) {
+      return {
+        status: 'error',
+        message: 'Invalid data',
+      }
+    }
+
+    await db.transaction(async (tx) => {
+      const lastChapter = await tx.query.chapter.findFirst({
+        where: eq(chapter.courseId, validation.data.courseId),
+        orderBy: desc(chapter.position),
+      })
+
+      await tx.insert(chapter).values({
+        title: validation.data.name,
+        courseId: validation.data.courseId,
+        position: lastChapter ? lastChapter.position + 1 : 1,
+      })
+    })
+
+    revalidatePath(`/admin/courses/${validation.data.courseId}/edit`)
+
+    return {
+      status: 'success',
+      message: 'Chapter created successfully',
+    }
+  } catch {
+    return {
+      status: 'error',
+      message: 'Failed to create chapter',
     }
   }
 }
