@@ -18,7 +18,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { CSS } from '@dnd-kit/utilities'
 import { AdminCourseType } from '@/data/admin/admin-get-course'
 import { cn } from '@/lib/utils'
@@ -27,6 +27,7 @@ import { ChevronDown, ChevronRight, FileText, GripVertical, Trash, Trash2 } from
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { reorderChapters, reorderLessons } from '../actions'
 
 interface CourseStructureProps {
   course: AdminCourseType
@@ -55,6 +56,25 @@ const CourseStructure = ({ course }: CourseStructureProps) => {
     })),
   }))
 
+  useEffect(() => {
+    setItems((prev) => {
+      const updatedItems =
+        course.chapters.map((chapter) => ({
+          id: chapter.id,
+          title: chapter.title,
+          order: chapter.position,
+          isOpen: prev.find((item) => item.id === chapter.id)?.isOpen ?? true,
+          lessons: chapter.lessons.map((lesson) => ({
+            id: lesson.id,
+            title: lesson.title,
+            order: lesson.position,
+          })),
+        })) || []
+
+      return updatedItems
+    })
+  }, [course])
+
   const [items, setItems] = useState(initialItems)
 
   function SortableItem({ id, children, className, data }: SortableItemProps) {
@@ -76,7 +96,7 @@ const CourseStructure = ({ course }: CourseStructureProps) => {
     )
   }
 
-  function handleDragEnd(event) {
+  async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
 
     if (!over || active.id === over.id) {
@@ -117,6 +137,91 @@ const CourseStructure = ({ course }: CourseStructureProps) => {
 
       const previousItems = [...items]
       setItems(updatedChapterForState)
+
+      if (courseId) {
+        const chaptersToUpdate = updatedChapterForState.map((chapter) => ({
+          id: chapter.id,
+          position: chapter.order,
+        }))
+
+        const reorderPromise = reorderChapters(chaptersToUpdate, courseId)
+        toast.promise(reorderPromise, {
+          loading: 'Reordering chapters...',
+          success: (data) => {
+            if (data.status === 'success') return data.message
+            throw new Error(data.message)
+          },
+          error: () => {
+            setItems(previousItems)
+            return 'Failed to reorder chapters'
+          },
+        })
+      }
+      return
+    }
+
+    if (activeType === 'lesson' && overType === 'lesson') {
+      const chapterId = active.data.current?.chapterId
+      const overChapterId = over.data.current?.chapterId
+
+      if (!chapterId || chapterId !== overChapterId) {
+        toast.error('Lesson move between different chapters is not allowed')
+        return
+      }
+
+      const chapterIndex = items.findIndex((chapter) => chapter.id === chapterId)
+
+      if (chapterIndex === -1) {
+        toast.error('Could not determine the chapter for lesson')
+        return
+      }
+
+      const chapterToUpdate = items[chapterIndex]
+      const oldLessonIndex = chapterToUpdate.lessons.findIndex((lesson) => lesson.id === activeId)
+      const newLessonIndex = chapterToUpdate.lessons.findIndex((lesson) => lesson.id === overId)
+
+      if (oldLessonIndex === -1 || newLessonIndex === -1) {
+        toast.error('Could not determine the lesson for reordering')
+        return
+      }
+
+      const reorderedLessons = arrayMove(chapterToUpdate.lessons, oldLessonIndex, newLessonIndex)
+      const updatedChapterForState = reorderedLessons.map((lesson, index) => ({
+        ...lesson,
+        order: index + 1,
+      }))
+
+      const newItems = [...items]
+      newItems[chapterIndex] = {
+        ...chapterToUpdate,
+        lessons: updatedChapterForState,
+      }
+
+      const previousItems = [...items]
+
+      setItems(newItems)
+
+      if (courseId) {
+        const lessonToUpdate = updatedChapterForState.map((lesson) => ({
+          id: lesson.id,
+          position: lesson.order,
+        }))
+
+        const reorderLessonsPromise = reorderLessons(chapterId, lessonToUpdate, courseId)
+        toast.promise(reorderLessonsPromise, {
+          loading: 'Reordering lessons...',
+          success: (data) => {
+            if (data.status === 'success') return data.message
+            throw new Error(data.message)
+          },
+          error: () => {
+            setItems(previousItems)
+            return 'Failed to reorder lessons'
+          },
+        })
+      }
+
+      return
     }
   }
 

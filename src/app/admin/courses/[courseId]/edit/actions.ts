@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/db'
-import { course } from '@/db/schema'
+import { chapter, course, lesson } from '@/db/schema'
 import { ActionResponse } from '@/lib/types'
 import { courseSchema, type CourseSchemaType } from '@/lib/zodSchemas'
 import { nanoid } from 'nanoid'
@@ -9,6 +9,7 @@ import { requireAdmin } from '@/data/admin/require-admin'
 import arcjet from '@/lib/arcjet'
 import { detectBot, fixedWindow, request } from '@arcjet/next'
 import { and, eq } from 'drizzle-orm'
+import { revalidatePath } from 'next/cache'
 
 const aj = arcjet
   .withRule(
@@ -71,6 +72,87 @@ export async function editCourse(courseId: string, data: CourseSchemaType): Prom
     return {
       status: 'error',
       message: 'Failed to create course',
+    }
+  }
+}
+
+export async function reorderLessons(
+  chapterId: string,
+  lessons: { id: string; position: number }[],
+  courseId: string,
+): Promise<ActionResponse> {
+  const session = await requireAdmin()
+  try {
+    if (!lessons || lessons.length === 0) {
+      return {
+        status: 'error',
+        message: 'No lessons to reorder',
+      }
+    }
+
+    await db.transaction(async (tx) => {
+      await Promise.all(
+        lessons.map(async (item) => {
+          return tx
+            .update(lesson)
+            .set({
+              position: item.position,
+            })
+            .where(and(eq(lesson.id, item.id), eq(lesson.chapterId, chapterId)))
+        }),
+      )
+    })
+
+    revalidatePath(`/admin/courses/${courseId}/edit`)
+
+    return {
+      status: 'success',
+      message: 'Lessons reordered successfully',
+    }
+  } catch {
+    return {
+      status: 'error',
+      message: 'Failed to reorder lessons',
+    }
+  }
+}
+
+export async function reorderChapters(
+  chapters: { id: string; position: number }[],
+  courseId: string,
+): Promise<ActionResponse> {
+  const session = await requireAdmin()
+  try {
+    if (!chapters || chapters.length === 0) {
+      return {
+        status: 'error',
+        message: 'No chapters to reorder',
+      }
+    }
+
+    await db.transaction(async (tx) => {
+      await Promise.all(
+        chapters.map(async (item) => {
+          return tx
+            .update(chapter)
+            .set({
+              position: item.position,
+            })
+            .where(and(eq(chapter.id, item.id), eq(chapter.courseId, courseId)))
+        }),
+      )
+    })
+
+    revalidatePath(`/admin/courses/${courseId}/edit`)
+
+    return {
+      status: 'success',
+      message: 'Chapters reordered successfully',
+    }
+  } catch {
+    return {
+      status: 'error',
+      message: 'Failed to reorder chapters',
     }
   }
 }
