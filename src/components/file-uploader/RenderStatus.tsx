@@ -44,14 +44,21 @@ export const RenderUploadedStatus = ({
   previewUrl,
   isDeleting,
   handleDeleteFile,
+  fileType,
 }: {
   previewUrl: string
   isDeleting: boolean
   handleDeleteFile: () => void
+  fileType: 'image' | 'video'
 }) => {
   return (
-    <div>
-      <Image src={previewUrl} alt="uploaded file" fill className="object-contain p-2" />
+    <div className="group relative flex h-full w-full items-center justify-center">
+      {fileType === 'image' ? (
+        <Image src={previewUrl} alt="uploaded file" fill className="object-contain p-2" />
+      ) : (
+        <video src={previewUrl} className="h-full w-full rounded-md object-contain p-2" controls />
+      )}
+
       <Button
         type="button"
         variant="destructive"

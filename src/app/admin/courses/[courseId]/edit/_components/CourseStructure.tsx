@@ -295,7 +295,7 @@ const CourseStructure = ({ course }: CourseStructureProps) => {
                                           <GripVertical className="size-4" />
                                         </Button>
                                         <FileText className="size-4" />
-                                        <Link href={`/admin/course/${course.id}/${item.id}/${lesson.id}`}>
+                                        <Link href={`/admin/courses/${course.id}/${item.id}/${lesson.id}`}>
                                           <p className="hover:text-primary cursor-pointer pl-2">{lesson.title}</p>
                                         </Link>
                                       </div>
