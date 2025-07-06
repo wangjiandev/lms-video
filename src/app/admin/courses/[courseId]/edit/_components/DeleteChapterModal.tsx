@@ -58,7 +58,7 @@ const DeleteChapterModal = ({ courseId, chapterId }: DeleteChapterModalProps) =>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={onSubmit} disabled={isPending}>
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : 'Continue'}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

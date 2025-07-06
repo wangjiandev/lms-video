@@ -59,7 +59,7 @@ const DeleteLesson = ({ courseId, chapterId, lessonId }: DeleteLessonProps) => {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={onSubmit} disabled={isPending}>
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : 'Continue'}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
