@@ -10,7 +10,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   arrayMove,
   SortableContext,
@@ -23,12 +23,15 @@ import { CSS } from '@dnd-kit/utilities'
 import { AdminCourseType } from '@/data/admin/admin-get-course'
 import { cn } from '@/lib/utils'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronRight, FileText, GripVertical, Trash, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileText, GripVertical, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { reorderChapters, reorderLessons } from '../actions'
 import NewChapterModal from './NewChapterModal'
+import NewLessonModal from './NewLessonModal'
+import DeleteLesson from './DeleteLesson'
+import DeleteChapterModal from './DeleteChapterModal'
 
 interface CourseStructureProps {
   course: AdminCourseType
@@ -269,9 +272,7 @@ const CourseStructure = ({ course }: CourseStructureProps) => {
                             <p className="hover:text-primary cursor-pointer pl-2">{item.title}</p>
                           </div>
 
-                          <Button size="icon" variant="ghost">
-                            <Trash className="size-4" />
-                          </Button>
+                          <DeleteChapterModal courseId={course.id} chapterId={item.id} />
                         </div>
                         <CollapsibleContent>
                           <div className="p-1">
@@ -298,18 +299,14 @@ const CourseStructure = ({ course }: CourseStructureProps) => {
                                           <p className="hover:text-primary cursor-pointer pl-2">{lesson.title}</p>
                                         </Link>
                                       </div>
-                                      <Button size="icon" variant="ghost">
-                                        <Trash2 className="size-4" />
-                                      </Button>
+                                      <DeleteLesson courseId={course.id} chapterId={item.id} lessonId={lesson.id} />
                                     </div>
                                   )}
                                 </SortableItem>
                               ))}
                             </SortableContext>
                             <div className="p-2">
-                              <Button size="sm" className="w-full" variant="secondary">
-                                Create New Lesson
-                              </Button>
+                              <NewLessonModal courseId={course.id} chapterId={item.id} />
                             </div>
                           </div>
                         </CollapsibleContent>
