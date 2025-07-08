@@ -14,6 +14,9 @@ import { Input } from '@/components/ui/input'
 import { useTransition } from 'react'
 import { RichTextEditor } from '@/components/rich-text-editor/Editor'
 import Uploader from '@/components/file-uploader/Uploader'
+import { updateLesson } from '../actions'
+import { tryCatch } from '@/hooks/try-catch'
+import { toast } from 'sonner'
 
 interface LessonFormProps {
   data: AdminLessonType
@@ -41,9 +44,22 @@ const LessonForm = ({ data, chapterId, courseId }: LessonFormProps) => {
   function onSubmit(values: LessonSchemaType) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values)
 
-    startTransition(async () => {})
+    const lessonId = data.data?.id!
+
+    startTransition(async () => {
+      const { data, error } = await tryCatch(updateLesson(values, lessonId))
+      if (error) {
+        toast.error(error.message)
+        return
+      }
+      if (data.status === 'success') {
+        toast.success(data.message)
+        form.reset()
+      } else if (data.status === 'error') {
+        toast.error(data.message)
+      }
+    })
   }
   return (
     <div>

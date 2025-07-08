@@ -266,7 +266,7 @@ const Uploader = ({ onChange, value, fileTypeAccepted = 'image' }: UploaderProps
     accept: fileTypeAccepted === 'image' ? { 'image/*': [] } : { 'video/*': [] },
     maxFiles: 1,
     multiple: false,
-    maxSize: 1024 * 1024 * 5, // 5MB
+    maxSize: fileTypeAccepted === 'image' ? 1024 * 1024 * 5 : 1024 * 1024 * 900, // 5MB for images, 900MB for videos
     onDropRejected: rejectedFiles,
     disabled: fileState.uploading || !!fileState.objectUrl,
   })
