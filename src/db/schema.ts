@@ -101,7 +101,9 @@ export const chapter = pgTable('chapter', {
 
   createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()),
   updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()),
-  courseId: text('course_id').notNull(),
+  courseId: text('course_id')
+    .notNull()
+    .references(() => course.id, { onDelete: 'cascade' }),
 })
 
 export const chapterRelations = relations(chapter, ({ many, one }) => ({
@@ -124,7 +126,9 @@ export const lesson = pgTable('lesson', {
 
   createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()),
   updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()),
-  chapterId: text('chapter_id').notNull(),
+  chapterId: text('chapter_id')
+    .notNull()
+    .references(() => chapter.id, { onDelete: 'cascade' }),
 })
 
 export const lessonRelations = relations(lesson, ({ one }) => ({
