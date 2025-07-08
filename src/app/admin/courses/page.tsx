@@ -2,12 +2,11 @@ import { PlusIcon } from 'lucide-react'
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { adminGetCourses } from '@/data/admin/admin-get-courses'
-import AdminCourseCard from './_components/AdminCourseCard'
+import { AdminCourseCard, AdminCourseCardSkeleton } from './_components/AdminCourseCard'
 import EmptyState from '@/components/general/EmptyState'
+import { Suspense } from 'react'
 
-const Page = async () => {
-  const courses = await adminGetCourses()
-
+const Page = () => {
   return (
     <div className="px-4 lg:px-6">
       <div className="mb-8 flex items-center justify-between">
@@ -17,6 +16,17 @@ const Page = async () => {
           Add Course
         </Link>
       </div>
+      <Suspense fallback={<AdminCourseCardSkeletonLayout />}>
+        <RenderCourses />
+      </Suspense>
+    </div>
+  )
+}
+
+async function RenderCourses() {
+  const courses = await adminGetCourses()
+  return (
+    <>
       {courses.length === 0 ? (
         <EmptyState
           title="No courses found"
@@ -31,6 +41,16 @@ const Page = async () => {
           ))}
         </div>
       )}
+    </>
+  )
+}
+
+function AdminCourseCardSkeletonLayout() {
+  return (
+    <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <AdminCourseCardSkeleton key={index} />
+      ))}
     </div>
   )
 }
