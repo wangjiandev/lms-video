@@ -10,6 +10,9 @@ export const user = pgTable('user', {
     .$defaultFn(() => false)
     .notNull(),
   image: text('image'),
+
+  stripeCustomerId: text('stripe_customer_id').unique(),
+
   createdAt: timestamp('created_at')
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
@@ -90,6 +93,7 @@ export const course = pgTable('course', {
 
 export const courseRelations = relations(course, ({ many }) => ({
   chapters: many(chapter),
+  enrollments: many(enrollment),
 }))
 
 export const chapter = pgTable('chapter', {
@@ -137,3 +141,21 @@ export const lessonRelations = relations(lesson, ({ one }) => ({
     references: [chapter.id],
   }),
 }))
+
+export const EnrollmentStatus = pgEnum('enrollment_status', ['Pending', 'Active', 'Cancelled'])
+
+export const enrollment = pgTable('enrollment', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => nanoid()),
+  amount: integer('amount').notNull(),
+  status: EnrollmentStatus('status').default('Pending'),
+  createdAt: timestamp('created_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+  updatedAt: timestamp('updated_at').$defaultFn(() => /* @__PURE__ */ new Date()),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  courseId: text('course_id')
+    .notNull()
+    .references(() => course.id, { onDelete: 'cascade' }),
+})
