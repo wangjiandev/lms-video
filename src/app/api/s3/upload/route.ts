@@ -6,7 +6,7 @@ import { env } from '@/lib/env'
 import { nanoid } from 'nanoid'
 import { S3 } from '@/lib/S3Client'
 import arcjet from '@/lib/arcjet'
-import { detectBot, fixedWindow } from '@arcjet/next'
+import { fixedWindow } from '@arcjet/next'
 import { requireAdmin } from '@/data/admin/require-admin'
 
 export const fileUploadSchema = z.object({
@@ -16,20 +16,13 @@ export const fileUploadSchema = z.object({
   isImage: z.boolean(),
 })
 
-const aj = arcjet
-  .withRule(
-    detectBot({
-      mode: 'LIVE',
-      allow: [],
-    }),
-  )
-  .withRule(
-    fixedWindow({
-      mode: 'LIVE',
-      window: '1m',
-      max: 5,
-    }),
-  )
+const aj = arcjet.withRule(
+  fixedWindow({
+    mode: 'LIVE',
+    window: '1m',
+    max: 5,
+  }),
+)
 
 export async function POST(request: NextRequest) {
   const session = await requireAdmin()
